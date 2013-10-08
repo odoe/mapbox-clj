@@ -1,4 +1,4 @@
-# map-prj
+# mapbox-clj
 Experimenting with ClojureScript using Mapbox
 
 

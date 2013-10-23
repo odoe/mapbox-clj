@@ -9,28 +9,43 @@
 
 (def mapbox (.-mapbox L))
 
+(def locateOpts {:setView true
+                 :maxZoom 16})
+
 (defn map-div [n]
   [:div { :id (str n) }])
 
-(def latlng
-  (array 34.0086, -118.4986))
+(defn parseResponse [e]
+  (.getResponseJson
+    (.-target e)))
 
-(def zoom 9)
+(defn rad [n]
+  (/ n 2))
+
+(defn onLocation [m]
+  (fn [e]
+    (.debug js/console "event: \n" e)
+    (let [radius (rad(.-accuracy e))]
+      (-> L (.marker
+              (.-latlng e))
+          (.addTo m)
+          (.bindPopup "Welcome to the jungle!")
+          (.openPopup))
+      (-> L (.circle (.-latlng e) radius)
+          (.addTo m))
+      )))
 
 (defn handler [event]
-  (let [response (.-target event)]
-    (let [data (.getResponseJson response)]
-      (dommy/append!
-        (sel1 :body) (map-div (.-mapname data)))
+  (let [data (parseResponse event)]
+    (dommy/append!
+      (sel1 :body) (map-div (.-mapname data)))
 
-      (let [mbmap (-> mapbox (.map (.-mapname data) (.-mapurl data))
-                      (.setView latlng zoom))]
+    (let [mbmap (-> mapbox (.map (.-mapname data) (.-mapurl data))
+                    (.setView (.-center data) (.-zoom data)))]
 
-        (-> L (.marker
-                (array 34.0086, -118.4986))
-            (.addTo mbmap)
-            (.bindPopup "<b>A point</b><br />Built with ClojureScript.")
-            (.openPopup)))
-      (.debug js/console data))))
+      (.on mbmap "locationfound" (onLocation mbmap))
+      (.locate mbmap (clj->js locateOpts)))
+
+    (.debug js/console data)))
 
 (xhr/send "config.json" handler "GET")

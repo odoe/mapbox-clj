@@ -13,16 +13,20 @@
                  :maxZoom 16})
 
 (defn map-div [n]
+  "Creates a map-div element with id given."
   [:div { :id (str n) }])
 
 (defn parseResponse [e]
+  "Returns JSON response from a target."
   (.getResponseJson
     (.-target e)))
 
 (defn rad [n]
+  "Divide value by2"
   (/ n 2))
 
 (defn onLocation [m]
+  "Returns function to hadle loadin map"
   (fn [e]
     (.debug js/console "event: \n" e)
     (let [radius (rad(.-accuracy e))]
@@ -36,6 +40,7 @@
       )))
 
 (defn handler [event]
+  "Handles the receipt of JSON configuration."
   (let [data (parseResponse event)]
     (dommy/append!
       (sel1 :body) (map-div (.-mapname data)))
